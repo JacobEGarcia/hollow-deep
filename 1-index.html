@@ -1,0 +1,833 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>HOLLOW DEEP — a recovered guide</title>
+<style>
+  :root{
+    --bone:#c9c2a8; --dim:#6e6a58; --blood:#7a2e22; --gold:#a8894a; --ink:#0a0908;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  html,body{width:100%;height:100%;overflow:hidden;background:#000;}
+  body{font-family:"Courier New",ui-monospace,monospace;color:var(--bone);}
+  #c{position:fixed;inset:0;width:100%;height:100%;image-rendering:pixelated;cursor:crosshair;}
+  .overlay{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;
+    background:radial-gradient(ellipse at 50% 40%, #14120c 0%, #060504 70%, #000 100%);z-index:10;}
+  .page{max-width:640px;width:92%;max-height:92vh;overflow-y:auto;border:1px solid #3a3527;
+    padding:34px 38px;background:
+      repeating-linear-gradient(0deg, rgba(255,255,255,0.012) 0 2px, transparent 2px 4px),
+      linear-gradient(180deg,#12100a,#0b0a06);
+    box-shadow:0 0 80px #000 inset, 0 0 40px #000;}
+  .page h1{font-size:34px;letter-spacing:8px;color:var(--bone);font-weight:400;text-align:center;}
+  .page h2{font-size:12px;letter-spacing:4px;color:var(--dim);text-align:center;margin-top:8px;font-weight:400;}
+  .rule{border:none;border-top:1px solid #3a3527;margin:18px 0;}
+  .page p{font-size:13px;line-height:1.7;color:#a39c83;margin:10px 0;}
+  .page .stat{font-size:12px;color:var(--dim);}
+  .page b{color:var(--gold);font-weight:400;}
+  .page .warn{color:var(--blood);}
+  .btns{display:flex;gap:14px;justify-content:center;margin-top:26px;flex-wrap:wrap;}
+  button{font-family:inherit;font-size:14px;letter-spacing:3px;padding:12px 26px;cursor:pointer;
+    background:#16130c;color:var(--bone);border:1px solid #4a4433;}
+  button:hover:not(:disabled){background:#241f13;border-color:var(--gold);color:#e8e0c4;}
+  button:disabled{opacity:0.35;cursor:default;}
+  .footer{margin-top:22px;text-align:center;font-size:10px;letter-spacing:2px;color:#4c4736;}
+  #hud{position:fixed;left:0;right:0;bottom:0;z-index:5;pointer-events:none;display:none;
+    padding:14px 18px;font-size:13px;letter-spacing:2px;text-shadow:0 1px 2px #000;
+    background:linear-gradient(0deg,rgba(0,0,0,0.55),transparent);}
+  #hpwrap{width:210px;height:10px;border:1px solid #4a4433;background:#0c0a06;margin-top:5px;}
+  #hp{height:100%;width:100%;background:var(--blood);}
+  #lore{position:fixed;top:7%;left:0;right:0;text-align:center;z-index:6;pointer-events:none;
+    font-size:14px;letter-spacing:2px;color:var(--bone);opacity:0;transition:opacity 0.8s;
+    text-shadow:0 1px 3px #000;font-style:italic;padding:0 20px;}
+  #vignette{position:fixed;inset:0;z-index:4;pointer-events:none;
+    box-shadow:0 0 140px 60px rgba(0,0,0,0.9) inset;}
+  #dmg{position:fixed;inset:0;z-index:7;pointer-events:none;background:radial-gradient(ellipse at center,transparent 40%,rgba(122,20,10,0.55) 100%);opacity:0;transition:opacity 0.15s;}
+  #scan{position:fixed;inset:0;z-index:8;pointer-events:none;opacity:0.5;
+    background:repeating-linear-gradient(0deg, rgba(0,0,0,0.16) 0 1px, transparent 1px 3px);}
+  .hidden{display:none !important;}
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="vignette"></div>
+<div id="scan"></div>
+<div id="dmg"></div>
+<div id="lore"></div>
+<div id="hud">
+  <div id="hudline">VIGOR</div>
+  <div id="hpwrap"><div id="hp"></div></div>
+  <div id="seals" style="margin-top:6px;">SEALS 0 / 3</div>
+</div>
+
+<div id="title" class="overlay">
+  <div class="page">
+    <h1>HOLLOW DEEP</h1>
+    <h2>THE OFFICIAL GUIDE · RECOVERED VOL. I OF ?</h2>
+    <hr class="rule">
+    <p><b>I. ON THE DESCENT.</b> You have found the stair that does not appear on any map. Below it waits the Deep, and at its root the Gate of the Hollow God, shut by three seals of bone.</p>
+    <p><b>II. ON THE HOLLOWED.</b> The ones who stayed. They walk slowly because they no longer remember why they walk. <span class="warn">Do not let them remember you.</span> A blade will return them to the dark — two good blows, sometimes three.</p>
+    <p><b>III. ON THE SEALS.</b> Three idols of bone lie in the far rooms. Carry all three to the Gate. The guide is emphatic: <b>do not look at the idols longer than necessary.</b></p>
+    <p class="stat">CONTROLS — VR: left stick walk · right stick turn · trigger to swing. DESKTOP: click to take the lamp · WASD walk · mouse look · left click to swing.</p>
+    <div class="btns">
+      <button id="vrbtn" disabled>ENTER VR</button>
+      <button id="flatbtn">DESCEND (DESKTOP)</button>
+    </div>
+    <div class="footer">THIS GUIDE WAS NEVER PUBLISHED · PAGES RECOVERED 1997 · DO NOT CIRCULATE</div>
+  </div>
+</div>
+
+<div id="dead" class="overlay hidden">
+  <div class="page">
+    <h1 style="color:var(--blood)">YOU STAYED</h1>
+    <h2>FINAL PAGE, RECOVERED</h2>
+    <hr class="rule">
+    <p>The Deep keeps what it catches. The guide offers no advice for the dead, only an observation: <i>you walk slowly now, because you no longer remember why you walk.</i></p>
+    <div class="btns"><button id="retrybtn">DESCEND AGAIN</button></div>
+  </div>
+</div>
+
+<div id="won" class="overlay hidden">
+  <div class="page">
+    <h1 style="color:var(--gold)">THE GATE OPENED</h1>
+    <h2>END OF RECOVERED PAGES</h2>
+    <hr class="rule">
+    <p><b>IV. ON WHAT WAITS.</b> The remaining pages of this guide were torn out. What is known: the Gate opened for you, and nothing in the Deep pursued you down the stair. The guide's final intact line reads —</p>
+    <p style="text-align:center;font-style:italic;">"It was never sealed to keep you out."</p>
+    <p class="stat" id="wintime"></p>
+    <div class="btns"><button id="againbtn">DESCEND AGAIN</button></div>
+  </div>
+</div>
+
+<script type="importmap">
+{ "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js" } }
+</script>
+
+<script type="module">
+import * as THREE from 'three';
+
+/* ============================================================
+   HOLLOW DEEP — a Vermis-inspired VR dungeon crawl
+   Single file, no assets. Procedural textures, procedural audio.
+   ============================================================ */
+
+const TILE = 4, WALL_H = 4, GW = 46, GH = 46;
+const canvas = document.getElementById('c');
+const ui = {
+  title: document.getElementById('title'),
+  dead: document.getElementById('dead'),
+  won: document.getElementById('won'),
+  hud: document.getElementById('hud'),
+  hp: document.getElementById('hp'),
+  seals: document.getElementById('seals'),
+  lore: document.getElementById('lore'),
+  dmg: document.getElementById('dmg'),
+  vrbtn: document.getElementById('vrbtn'),
+  flatbtn: document.getElementById('flatbtn'),
+  retrybtn: document.getElementById('retrybtn'),
+  againbtn: document.getElementById('againbtn'),
+  wintime: document.getElementById('wintime'),
+};
+
+const LORE = [
+  "“The first seal is always the one you already carry.”",
+  "“Torches burn downward here. The guide does not explain this.”",
+  "“If you hear dripping, it is not water.”",
+  "“The Hollowed were a garrison. They still believe they are guarding something.”",
+  "“Do not count the doors. They are not the same doors twice.”",
+  "“Page 41 of this guide is missing, and the index has been corrected to hide it.”",
+  "“It was never sealed to keep you out.”",
+];
+
+/* ---------------- audio (all procedural) ---------------- */
+let AC = null, master = null;
+function audioInit(){
+  if (AC) return;
+  AC = new (window.AudioContext || window.webkitAudioContext)();
+  master = AC.createGain(); master.gain.value = 0.5; master.connect(AC.destination);
+  // drone: two detuned lows through a lowpass, slow swell
+  const g = AC.createGain(); g.gain.value = 0.06;
+  const lp = AC.createBiquadFilter(); lp.type='lowpass'; lp.frequency.value=220;
+  [54, 54.7, 108.3].forEach(f=>{
+    const o = AC.createOscillator(); o.type='sawtooth'; o.frequency.value=f;
+    o.connect(lp); o.start();
+  });
+  const lfo = AC.createOscillator(); lfo.frequency.value = 0.07;
+  const lg = AC.createGain(); lg.gain.value = 0.03;
+  lfo.connect(lg); lg.connect(g.gain); lfo.start();
+  lp.connect(g); g.connect(master);
+  // wind-ish noise
+  const nb = noiseBuffer();
+  const ns = AC.createBufferSource(); ns.buffer = nb; ns.loop = true;
+  const nf = AC.createBiquadFilter(); nf.type='bandpass'; nf.frequency.value=400; nf.Q.value=0.6;
+  const ng = AC.createGain(); ng.gain.value = 0.015;
+  ns.connect(nf); nf.connect(ng); ng.connect(master); ns.start();
+  scheduleDrips();
+}
+function noiseBuffer(){
+  const len = AC.sampleRate * 2, b = AC.createBuffer(1, len, AC.sampleRate), d = b.getChannelData(0);
+  for (let i=0;i<len;i++) d[i] = Math.random()*2-1;
+  return b;
+}
+function scheduleDrips(){
+  if (!AC) return;
+  setTimeout(()=>{
+    if (state==='play'){
+      const o = AC.createOscillator(); o.type='sine';
+      const f = 700 + Math.random()*900;
+      o.frequency.setValueAtTime(f, AC.currentTime);
+      o.frequency.exponentialRampToValueAtTime(f*0.4, AC.currentTime+0.09);
+      const g = AC.createGain();
+      g.gain.setValueAtTime(0.05+Math.random()*0.05, AC.currentTime);
+      g.gain.exponentialRampToValueAtTime(0.0001, AC.currentTime+0.18);
+      o.connect(g); g.connect(master); o.start(); o.stop(AC.currentTime+0.2);
+    }
+    scheduleDrips();
+  }, 1200 + Math.random()*4500);
+}
+function sfx(kind){
+  if (!AC) return;
+  const t = AC.currentTime;
+  if (kind==='swing'){
+    const s = AC.createBufferSource(); s.buffer = noiseBuffer();
+    const f = AC.createBiquadFilter(); f.type='bandpass'; f.Q.value=1.4;
+    f.frequency.setValueAtTime(300,t); f.frequency.exponentialRampToValueAtTime(2600,t+0.16);
+    const g = AC.createGain(); g.gain.setValueAtTime(0.16,t); g.gain.exponentialRampToValueAtTime(0.001,t+0.2);
+    s.connect(f); f.connect(g); g.connect(master); s.start(t); s.stop(t+0.22);
+  } else if (kind==='hit'){
+    const o = AC.createOscillator(); o.type='sine';
+    o.frequency.setValueAtTime(130,t); o.frequency.exponentialRampToValueAtTime(38,t+0.16);
+    const g = AC.createGain(); g.gain.setValueAtTime(0.5,t); g.gain.exponentialRampToValueAtTime(0.001,t+0.24);
+    o.connect(g); g.connect(master); o.start(t); o.stop(t+0.26);
+  } else if (kind==='hurt'){
+    const o = AC.createOscillator(); o.type='square';
+    o.frequency.setValueAtTime(90,t); o.frequency.exponentialRampToValueAtTime(45,t+0.28);
+    const g = AC.createGain(); g.gain.setValueAtTime(0.25,t); g.gain.exponentialRampToValueAtTime(0.001,t+0.3);
+    o.connect(g); g.connect(master); o.start(t); o.stop(t+0.32);
+  } else if (kind==='groan'){
+    const o = AC.createOscillator(); o.type='sawtooth';
+    const f0 = 55 + Math.random()*30;
+    o.frequency.setValueAtTime(f0,t);
+    o.frequency.linearRampToValueAtTime(f0*0.75,t+0.9);
+    const fl = AC.createBiquadFilter(); fl.type='lowpass'; fl.frequency.value=320;
+    const g = AC.createGain(); g.gain.setValueAtTime(0.0001,t);
+    g.gain.exponentialRampToValueAtTime(0.09,t+0.25); g.gain.exponentialRampToValueAtTime(0.0001,t+1.1);
+    o.connect(fl); fl.connect(g); g.connect(master); o.start(t); o.stop(t+1.2);
+  } else if (kind==='die'){
+    const o = AC.createOscillator(); o.type='sawtooth';
+    o.frequency.setValueAtTime(160,t); o.frequency.exponentialRampToValueAtTime(28,t+0.8);
+    const fl = AC.createBiquadFilter(); fl.type='lowpass'; fl.frequency.value=500;
+    const g = AC.createGain(); g.gain.setValueAtTime(0.2,t); g.gain.exponentialRampToValueAtTime(0.0001,t+0.9);
+    o.connect(fl); fl.connect(g); g.connect(master); o.start(t); o.stop(t+1.0);
+  } else if (kind==='seal'){
+    [220, 261.6, 311.1].forEach((fq,i)=>{
+      const o = AC.createOscillator(); o.type='triangle'; o.frequency.value=fq;
+      const g = AC.createGain(); g.gain.setValueAtTime(0.0001,t+i*0.12);
+      g.gain.exponentialRampToValueAtTime(0.12,t+i*0.12+0.05);
+      g.gain.exponentialRampToValueAtTime(0.0001,t+i*0.12+1.4);
+      o.connect(g); g.connect(master); o.start(t+i*0.12); o.stop(t+i*0.12+1.5);
+    });
+  } else if (kind==='gate'){
+    const s = AC.createBufferSource(); s.buffer = noiseBuffer();
+    const f = AC.createBiquadFilter(); f.type='lowpass'; f.frequency.value=110;
+    const g = AC.createGain(); g.gain.setValueAtTime(0.0001,t);
+    g.gain.exponentialRampToValueAtTime(0.6,t+0.6); g.gain.exponentialRampToValueAtTime(0.0001,t+3.2);
+    s.connect(f); f.connect(g); g.connect(master); s.start(t); s.stop(t+3.4);
+  }
+}
+
+/* ---------------- procedural textures ---------------- */
+function canvasTex(size, draw){
+  const cv = document.createElement('canvas'); cv.width = cv.height = size;
+  draw(cv.getContext('2d'), size);
+  const tx = new THREE.CanvasTexture(cv);
+  tx.magFilter = THREE.NearestFilter; tx.minFilter = THREE.NearestFilter;
+  tx.wrapS = tx.wrapT = THREE.RepeatWrapping;
+  tx.colorSpace = THREE.SRGBColorSpace;
+  return tx;
+}
+const stoneTex = canvasTex(64,(g,s)=>{
+  g.fillStyle='#2a2721'; g.fillRect(0,0,s,s);
+  for (let y=0;y<4;y++) for (let x=0;x<2;x++){
+    const off = (y%2)*16, px = x*32+off-16, py = y*16;
+    const shade = 34+Math.floor(Math.random()*22);
+    g.fillStyle = `rgb(${shade+8},${shade+4},${shade-4})`;
+    g.fillRect(px+1,py+1,30,14);
+    for (let i=0;i<12;i++){
+      g.fillStyle = `rgba(0,0,0,${Math.random()*0.25})`;
+      g.fillRect(px+1+Math.random()*28, py+1+Math.random()*12, 2, 2);
+    }
+  }
+});
+const floorTex = canvasTex(64,(g,s)=>{
+  g.fillStyle='#1c1a15'; g.fillRect(0,0,s,s);
+  for (let i=0;i<8;i++){
+    const shade = 24+Math.floor(Math.random()*14);
+    g.fillStyle = `rgb(${shade},${shade-2},${shade-6})`;
+    g.fillRect((i%4)*16+1, Math.floor(i/4)*32+1, 14, 30);
+  }
+  for (let i=0;i<70;i++){
+    g.fillStyle = `rgba(0,0,0,${Math.random()*0.3})`;
+    g.fillRect(Math.random()*s, Math.random()*s, 2, 2);
+  }
+});
+const darkStoneTex = canvasTex(64,(g,s)=>{
+  g.fillStyle='#14130f'; g.fillRect(0,0,s,s);
+  for (let y=0;y<4;y++) for (let x=0;x<2;x++){
+    const off=(y%2)*16;
+    g.fillStyle = `rgb(${20+Math.random()*10|0},${19+Math.random()*8|0},${15+Math.random()*6|0})`;
+    g.fillRect(x*32+off-15, y*16+1, 30, 14);
+  }
+});
+
+/* ---------------- renderer / scene ---------------- */
+const renderer = new THREE.WebGLRenderer({canvas, antialias:false, powerPreference:'high-performance'});
+renderer.setPixelRatio(1);
+renderer.xr.enabled = true;
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x030302);
+scene.fog = new THREE.FogExp2(0x030302, 0.085);
+const camera = new THREE.PerspectiveCamera(72, innerWidth/innerHeight, 0.05, 60);
+const rig = new THREE.Group(); rig.add(camera); scene.add(rig);
+
+scene.add(new THREE.HemisphereLight(0x2a3328, 0x0a0806, 0.9));
+
+const lantern = new THREE.PointLight(0xd8a860, 26, 16, 1.4);
+camera.add(lantern); lantern.position.set(0.15, -0.1, 0.1);
+
+/* low-res desktop pipeline: render small, let CSS upscale (image-rendering: pixelated) */
+const PIXEL_SCALE = 0.42;
+function onResize(){
+  camera.aspect = innerWidth/innerHeight; camera.updateProjectionMatrix();
+  if (renderer.xr.isPresenting){
+    renderer.setSize(innerWidth, innerHeight);
+  } else {
+    renderer.setSize(Math.floor(innerWidth*PIXEL_SCALE), Math.floor(innerHeight*PIXEL_SCALE), false);
+    canvas.style.width = '100%'; canvas.style.height = '100%';
+  }
+}
+addEventListener('resize', onResize);
+
+/* ---------------- dungeon generation ---------------- */
+let grid, rooms, spawnCell, gateCell, relicCells, torchSpots, enemyCells;
+function genDungeon(){
+  grid = Array.from({length:GH},()=>Array(GW).fill(1));
+  rooms = [];
+  let attempts = 0;
+  while (rooms.length < 11 && attempts++ < 300){
+    const w = 4+Math.floor(Math.random()*5), h = 4+Math.floor(Math.random()*5);
+    const x = 2+Math.floor(Math.random()*(GW-w-4)), y = 2+Math.floor(Math.random()*(GH-h-4));
+    if (rooms.some(r => x < r.x+r.w+2 && x+w+2 > r.x && y < r.y+r.h+2 && y+h+2 > r.y)) continue;
+    rooms.push({x,y,w,h,cx:x+(w>>1), cy:y+(h>>1)});
+    for (let j=y;j<y+h;j++) for (let i=x;i<x+w;i++) grid[j][i]=0;
+  }
+  for (let i=1;i<rooms.length;i++){
+    let a = rooms[i-1], b = rooms[i], x=a.cx, y=a.cy;
+    while (x!==b.cx){ grid[y][x]=0; x += Math.sign(b.cx-x); }
+    while (y!==b.cy){ grid[y][x]=0; y += Math.sign(b.cy-y); }
+  }
+  // widen corridors randomly for organic feel
+  for (let j=1;j<GH-1;j++) for (let i=1;i<GW-1;i++)
+    if (grid[j][i]===0 && Math.random()<0.12) grid[j][i+1]=0;
+
+  spawnCell = {x:rooms[0].cx, y:rooms[0].cy};
+  const byDist = rooms.slice(1).sort((a,b)=>
+    (Math.hypot(b.cx-spawnCell.x,b.cy-spawnCell.y)) - (Math.hypot(a.cx-spawnCell.x,a.cy-spawnCell.y)));
+  gateCell = {x:byDist[0].cx, y:byDist[0].cy};
+  relicCells = byDist.slice(1,4).map(r=>({x:r.cx, y:r.cy}));
+  enemyCells = byDist.slice(3).map(r=>({x:r.cx+1, y:r.cy+1}));
+  // torches: wall-adjacent floor cells
+  torchSpots = [];
+  for (let j=1;j<GH-1;j++) for (let i=1;i<GW-1;i++){
+    if (grid[j][i]===0 && (grid[j-1][i]||grid[j+1][i]||grid[j][i-1]||grid[j][i+1]) && Math.random()<0.16)
+      torchSpots.push({x:i, y:j});
+  }
+}
+const cellToWorld = (cx,cy)=> new THREE.Vector3((cx-GW/2)*TILE, 0, (cy-GH/2)*TILE);
+function isWallAt(wx,wz){
+  const cx = Math.round(wx/TILE + GW/2), cy = Math.round(wz/TILE + GH/2);
+  if (cx<0||cy<0||cx>=GW||cy>=GH) return true;
+  return grid[cy][cx]===1;
+}
+
+/* ---------------- world meshes ---------------- */
+let worldGroup = null, gateMesh, gateOpen = false, gateAnim = 0, gateGlow;
+const relics = [], enemies = [], torchFlames = [], lightPool = [];
+function buildWorld(){
+  if (worldGroup){ scene.remove(worldGroup); worldGroup.traverse(o=>{o.geometry?.dispose?.();}); }
+  worldGroup = new THREE.Group(); scene.add(worldGroup);
+  relics.length = 0; enemies.length = 0; torchFlames.length = 0; lightPool.length = 0;
+  gateOpen = false; gateAnim = 0;
+
+  // floor & ceiling
+  const fw = GW*TILE, fh = GH*TILE;
+  const fTex = floorTex.clone(); fTex.repeat.set(GW,GH); fTex.needsUpdate = true;
+  const floor = new THREE.Mesh(new THREE.PlaneGeometry(fw,fh),
+    new THREE.MeshLambertMaterial({map:fTex}));
+  floor.rotation.x = -Math.PI/2; worldGroup.add(floor);
+  const cTex = darkStoneTex.clone(); cTex.repeat.set(GW,GH); cTex.needsUpdate = true;
+  const ceil = new THREE.Mesh(new THREE.PlaneGeometry(fw,fh),
+    new THREE.MeshLambertMaterial({map:cTex}));
+  ceil.rotation.x = Math.PI/2; ceil.position.y = WALL_H; worldGroup.add(ceil);
+
+  // walls via InstancedMesh
+  let wallCount = 0;
+  for (let j=0;j<GH;j++) for (let i=0;i<GW;i++) if (grid[j][i]===1) wallCount++;
+  const wallMat = new THREE.MeshLambertMaterial({map:stoneTex});
+  const walls = new THREE.InstancedMesh(new THREE.BoxGeometry(TILE,WALL_H,TILE), wallMat, wallCount);
+  const m4 = new THREE.Matrix4(); let k=0;
+  for (let j=0;j<GH;j++) for (let i=0;i<GW;i++){
+    if (grid[j][i]!==1) continue;
+    // skip fully buried blocks (perf + they are never seen)
+    if (j>0&&j<GH-1&&i>0&&i<GW-1 && grid[j-1][i]&&grid[j+1][i]&&grid[j][i-1]&&grid[j][i+1]&&grid[j-1][i-1]&&grid[j-1][i+1]&&grid[j+1][i-1]&&grid[j+1][i+1]) continue;
+    const p = cellToWorld(i,j);
+    m4.makeTranslation(p.x, WALL_H/2, p.z);
+    walls.setMatrixAt(k++, m4);
+  }
+  walls.count = k; walls.instanceMatrix.needsUpdate = true;
+  worldGroup.add(walls);
+
+  // torches
+  const flameGeo = new THREE.ConeGeometry(0.09,0.35,5);
+  const flameMat = new THREE.MeshBasicMaterial({color:0xe8a04a});
+  const stickGeo = new THREE.CylinderGeometry(0.03,0.04,0.5,4);
+  const stickMat = new THREE.MeshLambertMaterial({color:0x3a2c18});
+  torchSpots.forEach(t=>{
+    const p = cellToWorld(t.x,t.y);
+    // push toward adjacent wall
+    let ox=0, oz=0;
+    if (grid[t.y-1][t.x]) oz=-TILE/2+0.25; else if (grid[t.y+1][t.x]) oz=TILE/2-0.25;
+    else if (grid[t.y][t.x-1]) ox=-TILE/2+0.25; else if (grid[t.y][t.x+1]) ox=TILE/2-0.25;
+    const g = new THREE.Group();
+    const stick = new THREE.Mesh(stickGeo, stickMat); stick.position.y = 1.5;
+    const flame = new THREE.Mesh(flameGeo, flameMat); flame.position.y = 1.9;
+    g.add(stick, flame); g.position.set(p.x+ox, 0, p.z+oz);
+    worldGroup.add(g);
+    torchFlames.push({mesh:flame, x:p.x+ox, z:p.z+oz, seed:Math.random()*100});
+  });
+  // light pool: 6 point lights assigned to nearest torches
+  for (let i=0;i<6;i++){
+    const L = new THREE.PointLight(0xd88a3a, 0, 11, 1.4);
+    worldGroup.add(L); lightPool.push(L);
+  }
+
+  // relics — bone idols
+  const idolMat = new THREE.MeshLambertMaterial({color:0xd8d2b8, emissive:0x2a4a2a, emissiveIntensity:0.9});
+  relicCells.forEach((rc,idx)=>{
+    const p = cellToWorld(rc.x,rc.y);
+    const g = new THREE.Group();
+    const body = new THREE.Mesh(new THREE.ConeGeometry(0.22,0.9,5), idolMat); body.position.y = 0.75;
+    const skull = new THREE.Mesh(new THREE.IcosahedronGeometry(0.16,0), idolMat); skull.position.y = 1.35;
+    const halo = new THREE.Mesh(new THREE.TorusGeometry(0.28,0.02,5,18),
+      new THREE.MeshBasicMaterial({color:0x5a8a4a}));
+    halo.position.y = 1.35; halo.rotation.x = Math.PI/2;
+    g.add(body, skull, halo);
+    g.position.set(p.x, 0, p.z);
+    worldGroup.add(g);
+    relics.push({group:g, taken:false, spin:Math.random()*6});
+  });
+
+  // gate — the Hollow God's door
+  {
+    const p = cellToWorld(gateCell.x, gateCell.y);
+    const frame = new THREE.Mesh(new THREE.BoxGeometry(3.4,4.2,0.5),
+      new THREE.MeshLambertMaterial({map:darkStoneTex}));
+    frame.position.set(p.x, 2.1, p.z); worldGroup.add(frame);
+    gateMesh = new THREE.Mesh(new THREE.BoxGeometry(2.4,3.4,0.3),
+      new THREE.MeshLambertMaterial({color:0x2a2018, emissive:0xa8894a, emissiveIntensity:0.12}));
+    gateMesh.position.set(p.x, 1.7, p.z-0.31); worldGroup.add(gateMesh);
+    gateGlow = new THREE.PointLight(0x6a9a4a, 0, 8, 1.5);
+    gateGlow.position.set(p.x, 1.8, p.z-1.0); worldGroup.add(gateGlow);
+  }
+
+  // the Hollowed
+  enemyCells.forEach(ec=>{
+    const p = cellToWorld(ec.x, ec.y);
+    enemies.push(makeHollowed(p.x, p.z));
+  });
+}
+
+function makeHollowed(x,z){
+  const g = new THREE.Group();
+  const skin = new THREE.MeshLambertMaterial({color:0x5a6152, flatShading:true});
+  const rag = new THREE.MeshLambertMaterial({color:0x2c2820, flatShading:true});
+  const torso = new THREE.Mesh(new THREE.BoxGeometry(0.55,0.95,0.3), rag); torso.position.y = 1.15;
+  const head = new THREE.Mesh(new THREE.BoxGeometry(0.3,0.36,0.3), skin); head.position.y = 1.88;
+  head.rotation.z = 0.18;
+  const eyeMat = new THREE.MeshBasicMaterial({color:0xa8e87a});
+  const e1 = new THREE.Mesh(new THREE.BoxGeometry(0.05,0.04,0.02), eyeMat); e1.position.set(-0.08,1.9,0.16);
+  const e2 = e1.clone(); e2.position.x = 0.08;
+  const armL = new THREE.Mesh(new THREE.BoxGeometry(0.13,0.85,0.13), skin); armL.position.set(-0.36,1.2,0.1);
+  const armR = armL.clone(); armR.position.x = 0.36;
+  armL.rotation.x = armR.rotation.x = -0.7;
+  const legL = new THREE.Mesh(new THREE.BoxGeometry(0.16,0.75,0.16), rag); legL.position.set(-0.15,0.38,0);
+  const legR = legL.clone(); legR.position.x = 0.15;
+  g.add(torso, head, e1, e2, armL, armR, legL, legR);
+  g.position.set(x, 0, z);
+  worldGroup.add(g);
+  return {
+    group:g, hp:3, dead:false, sink:0,
+    speed: 0.55 + Math.random()*0.4,
+    attackCd: 0, groanCd: 3+Math.random()*6,
+    limbs:{armL,armR,legL,legR,head}, phase: Math.random()*6,
+  };
+}
+
+/* ---------------- sword ---------------- */
+const sword = new THREE.Group();
+{
+  const blade = new THREE.Mesh(new THREE.BoxGeometry(0.045,0.8,0.11),
+    new THREE.MeshLambertMaterial({color:0x9a9788, emissive:0x222018, flatShading:true}));
+  blade.position.y = 0.55;
+  const guard = new THREE.Mesh(new THREE.BoxGeometry(0.2,0.05,0.16),
+    new THREE.MeshLambertMaterial({color:0x6a5326}));
+  guard.position.y = 0.14;
+  const grip = new THREE.Mesh(new THREE.CylinderGeometry(0.03,0.035,0.24,5),
+    new THREE.MeshLambertMaterial({color:0x2c1e12}));
+  sword.add(blade, guard, grip);
+  sword.rotation.x = -0.5;
+  sword.scale.setScalar(0.55);
+}
+let swingT = -1; // -1 idle, else 0..1 through swing
+function trySwing(){
+  if (swingT >= 0) return;
+  swingT = 0; sfx('swing');
+}
+
+/* ---------------- game state ---------------- */
+let state = 'title';
+let hp, seals, startTime, loreTimer = 0, loreIdx = 0;
+function startGame(){
+  genDungeon(); buildWorld();
+  hp = 100; seals = 0; startTime = performance.now(); swingT = -1;
+  const sp = cellToWorld(spawnCell.x, spawnCell.y);
+  rig.position.set(sp.x, 0, sp.z); rig.rotation.y = 0; camYaw = 0; camPitch = 0; camera.rotation.set(0,0,0);
+  state = 'play';
+  ui.title.classList.add('hidden');
+  ui.dead.classList.add('hidden');
+  ui.won.classList.add('hidden');
+  ui.hud.style.display = 'block';
+  updateHud();
+  showLore(LORE[0]); loreIdx = 1; loreTimer = 9;
+  drawVrHud();
+}
+function updateHud(){
+  ui.hp.style.width = Math.max(0,hp) + '%';
+  ui.seals.textContent = `SEALS ${seals} / 3`;
+}
+let loreHide = 0;
+function showLore(text){
+  ui.lore.textContent = text; ui.lore.style.opacity = 1;
+  loreHide = performance.now() + 5200;
+  vrLoreLine = text; drawVrHud();
+}
+function damagePlayer(n){
+  if (state!=='play') return;
+  hp -= n; updateHud(); sfx('hurt');
+  ui.dmg.style.opacity = 1;
+  setTimeout(()=>ui.dmg.style.opacity = 0, 220);
+  vrFlash = 0.6;
+  if (hp <= 0){
+    state = 'dead';
+    ui.dead.classList.remove('hidden');
+    ui.hud.style.display = 'none';
+    document.exitPointerLock?.();
+    if (renderer.xr.isPresenting) renderer.xr.getSession()?.end();
+  }
+}
+function winGame(){
+  state = 'won';
+  const secs = Math.floor((performance.now()-startTime)/1000);
+  ui.wintime.textContent = `DESCENT COMPLETED IN ${Math.floor(secs/60)} MIN ${secs%60} SEC · THE GUIDE RECORDS YOUR NAME`;
+  ui.won.classList.remove('hidden');
+  ui.hud.style.display = 'none';
+  document.exitPointerLock?.();
+  if (renderer.xr.isPresenting) renderer.xr.getSession()?.end();
+}
+
+/* ---------------- VR HUD (canvas plane on camera) ---------------- */
+const vrHudCanvas = document.createElement('canvas'); vrHudCanvas.width = 512; vrHudCanvas.height = 160;
+const vrHudTex = new THREE.CanvasTexture(vrHudCanvas);
+const vrHud = new THREE.Mesh(new THREE.PlaneGeometry(0.5,0.156),
+  new THREE.MeshBasicMaterial({map:vrHudTex, transparent:true, depthTest:false}));
+vrHud.position.set(0,-0.42,-0.85); vrHud.renderOrder = 999;
+camera.add(vrHud);
+let vrLoreLine = '', vrFlash = 0;
+function drawVrHud(){
+  const g = vrHudCanvas.getContext('2d');
+  g.clearRect(0,0,512,160);
+  if (vrFlash > 0){ g.fillStyle = `rgba(122,20,10,${vrFlash*0.7})`; g.fillRect(0,0,512,160); }
+  g.font = '20px "Courier New"'; g.fillStyle = '#c9c2a8';
+  g.fillText('VIGOR', 10, 30);
+  g.strokeStyle = '#4a4433'; g.strokeRect(10, 40, 200, 14);
+  g.fillStyle = '#7a2e22'; g.fillRect(11, 41, 198*Math.max(0,hp||0)/100, 12);
+  g.fillStyle = '#a8894a'; g.fillText(`SEALS ${seals||0} / 3`, 10, 84);
+  if (vrLoreLine){
+    g.font = 'italic 16px "Courier New"'; g.fillStyle = 'rgba(201,194,168,0.9)';
+    const line = vrLoreLine.length > 56 ? vrLoreLine.slice(0,56)+'…' : vrLoreLine;
+    g.fillText(line, 10, 130);
+  }
+  vrHudTex.needsUpdate = true;
+}
+
+/* ---------------- input: desktop ---------------- */
+let camYaw = 0, camPitch = 0;
+const keys = {};
+addEventListener('keydown', e=> keys[e.code]=true);
+addEventListener('keyup', e=> keys[e.code]=false);
+canvas.addEventListener('click', ()=>{
+  if (state!=='play' || renderer.xr.isPresenting) return;
+  if (document.pointerLockElement !== canvas){ canvas.requestPointerLock(); }
+  else trySwing();
+});
+addEventListener('mousemove', e=>{
+  if (document.pointerLockElement !== canvas || state!=='play') return;
+  camYaw -= e.movementX*0.0026;
+  camPitch = Math.max(-1.2, Math.min(1.2, camPitch - e.movementY*0.0026));
+});
+ui.flatbtn.addEventListener('click', ()=>{ audioInit(); startGame(); });
+ui.retrybtn.addEventListener('click', ()=>{ audioInit(); startGame(); });
+ui.againbtn.addEventListener('click', ()=>{ audioInit(); startGame(); });
+
+/* ---------------- input: VR ---------------- */
+let xrSession = null;
+if (navigator.xr?.isSessionSupported){
+  navigator.xr.isSessionSupported('immersive-vr').then(ok=>{
+    if (ok) ui.vrbtn.disabled = false;
+    else ui.vrbtn.textContent = 'VR NOT FOUND — DESKTOP BELOW';
+  }).catch(()=>{});
+}
+ui.vrbtn.addEventListener('click', async ()=>{
+  try{
+    audioInit();
+    xrSession = await navigator.xr.requestSession('immersive-vr', {optionalFeatures:['local-floor']});
+    await renderer.xr.setSession(xrSession);
+    onResize();
+    if (state!=='play') startGame();
+    xrSession.addEventListener('end', ()=>{
+      xrSession = null; onResize();
+      if (state==='play'){ state='title'; ui.title.classList.remove('hidden'); ui.hud.style.display='none'; }
+    });
+  }catch(err){
+    ui.vrbtn.textContent = 'VR FAILED — USE DESKTOP';
+  }
+});
+const ctrl = [renderer.xr.getController(0), renderer.xr.getController(1)];
+ctrl.forEach(c=>{
+  c.addEventListener('selectstart', trySwing);
+  rig.add(c);
+});
+// sword follows right hand in VR, camera in desktop
+renderer.xr.addEventListener('sessionstart', ()=>{ ctrl[1].add(sword); sword.scale.setScalar(1); sword.position.set(0,-0.02,-0.05); sword.rotation.set(-0.5,0,0); });
+renderer.xr.addEventListener('sessionend', ()=>{ camera.add(sword); sword.position.set(0.24,-0.26,-0.42); sword.rotation.set(-0.5,0.15,0); });
+camera.add(sword); sword.position.set(0.24,-0.26,-0.42);
+
+let snapCd = 0;
+function pollXrInput(dt){
+  if (!xrSession) return;
+  for (const src of xrSession.inputSources){
+    if (!src.gamepad) continue;
+    const ax = src.gamepad.axes;
+    const x = ax[2] ?? ax[0] ?? 0, y = ax[3] ?? ax[1] ?? 0;
+    if (src.handedness === 'left'){
+      movePlayer(x*dt*2.4, -y*dt*2.4, true);
+    } else if (src.handedness === 'right'){
+      snapCd -= dt;
+      if (Math.abs(x) > 0.65 && snapCd <= 0){
+        rig.rotation.y -= Math.sign(x) * Math.PI/4;
+        snapCd = 0.3;
+      }
+    }
+  }
+}
+
+/* ---------------- movement & collision ---------------- */
+const tmpV = new THREE.Vector3(), tmpF = new THREE.Vector3();
+function movePlayer(dx, dz, vrRelative){
+  // dx: strafe, dz: forward (negative = forward on stick)
+  const yaw = vrRelative ? getCamYaw() : camYaw;
+  const sin = Math.sin(yaw), cos = Math.cos(yaw);
+  const mx = (dx*cos - dz*sin), mz = (-dx*sin - dz*cos);
+  const px = rig.position.x, pz = rig.position.z;
+  const r = 0.42;
+  if (!isWallAt(px + mx + Math.sign(mx)*r, pz)) rig.position.x += mx;
+  if (!isWallAt(rig.position.x, pz + mz + Math.sign(mz)*r)) rig.position.z += mz;
+}
+function getCamYaw(){
+  camera.getWorldDirection(tmpF);
+  return Math.atan2(-tmpF.x, -tmpF.z);
+}
+
+/* ---------------- main loop ---------------- */
+const clock = new THREE.Clock();
+let wobbleT = 0;
+function animate(){
+  const dt = Math.min(clock.getDelta(), 0.05);
+  const t = clock.elapsedTime;
+  vrHud.visible = renderer.xr.isPresenting;
+
+  if (state === 'play'){
+    // desktop movement
+    if (!renderer.xr.isPresenting && document.pointerLockElement === canvas){
+      const sp = 2.6*dt;
+      let dx = 0, dz = 0;
+      if (keys['KeyW']) dz += sp;
+      if (keys['KeyS']) dz -= sp;
+      if (keys['KeyA']) dx -= sp;
+      if (keys['KeyD']) dx += sp;
+      if (dx||dz) movePlayer(dx, dz, false);
+      rig.rotation.y = camYaw;
+      camera.rotation.x = camPitch;
+    }
+    pollXrInput(dt);
+    if (!renderer.xr.isPresenting) camera.position.y = 1.62 + Math.sin(t*1.4)*0.02;
+
+    // lantern flicker
+    lantern.intensity = 25 + Math.sin(t*13)*2.5 + Math.sin(t*31.7)*1.5;
+
+    // torch flames + light pool
+    const step = Math.floor(t*9); // quantized flicker — PS1 cadence
+    torchFlames.forEach(f=>{
+      const s = 0.85 + 0.3*Math.abs(Math.sin(f.seed + step*1.7));
+      f.mesh.scale.set(s, s*(0.9+0.3*Math.sin(f.seed*2+step)), s);
+    });
+    // assign pool lights to nearest torches
+    const sorted = torchFlames.map(f=>({f, d:(f.x-rig.position.x)**2 + (f.z-rig.position.z)**2}))
+      .sort((a,b)=>a.d-b.d).slice(0, lightPool.length);
+    lightPool.forEach((L,i)=>{
+      const s = sorted[i];
+      if (s && s.d < 500){
+        L.position.set(s.f.x, 2.1, s.f.z);
+        L.intensity = 13 + Math.sin(step*2.3 + s.f.seed)*4;
+      } else L.intensity = 0;
+    });
+
+    // swing animation + hit check
+    if (swingT >= 0){
+      swingT += dt*3.4;
+      const ph = Math.min(swingT, 1);
+      sword.rotation.x = -0.5 - Math.sin(ph*Math.PI)*1.9;
+      sword.rotation.z = Math.sin(ph*Math.PI)*0.5;
+      if (ph > 0.3 && ph < 0.75){
+        // hit check
+        const sp = new THREE.Vector3();
+        (renderer.xr.isPresenting ? ctrl[1] : camera).getWorldPosition(sp);
+        const dir = new THREE.Vector3();
+        (renderer.xr.isPresenting ? ctrl[1] : camera).getWorldDirection(dir);
+        enemies.forEach(e=>{
+          if (e.dead) return;
+          const ep = e.group.position;
+          const dx = ep.x-sp.x, dz = ep.z-sp.z;
+          const dist = Math.hypot(dx,dz);
+          if (dist < 2.1){
+            const ang = Math.atan2(-dx,-dz);
+            const facing = renderer.xr.isPresenting ? getCamYaw() : camYaw;
+            let diff = Math.abs(ang - facing);
+            if (diff > Math.PI) diff = Math.PI*2 - diff;
+            if (diff < 0.9 && !e.hitThisSwing){
+              e.hitThisSwing = true; e.hp--;
+              sfx('hit');
+              e.group.position.x += Math.sin(ang+Math.PI)*0.3;
+              e.group.position.z += Math.cos(ang+Math.PI)*0.3;
+              if (e.hp <= 0){ e.dead = true; sfx('die'); }
+            }
+          }
+        });
+      }
+      if (swingT >= 1){ swingT = -1; sword.rotation.set(-0.5, renderer.xr.isPresenting?0:0.15, 0); enemies.forEach(e=>e.hitThisSwing=false); }
+    }
+
+    // enemies
+    const pp = rig.position;
+    enemies.forEach(e=>{
+      if (e.dead){
+        e.sink += dt;
+        e.group.position.y = -e.sink*0.9;
+        e.group.rotation.z += dt*1.2;
+        if (e.sink > 2.2){ worldGroup.remove(e.group); }
+        return;
+      }
+      const dx = pp.x - e.group.position.x, dz = pp.z - e.group.position.z;
+      const dist = Math.hypot(dx,dz);
+      e.groanCd -= dt;
+      if (e.groanCd < 0 && dist < 20){ sfx('groan'); e.groanCd = 5+Math.random()*8; }
+      if (dist < 16 && dist > 1.1){
+        // shamble toward player with wall check
+        const mx = (dx/dist)*e.speed*dt, mz = (dz/dist)*e.speed*dt;
+        if (!isWallAt(e.group.position.x + mx*3, e.group.position.z)) e.group.position.x += mx;
+        if (!isWallAt(e.group.position.x, e.group.position.z + mz*3)) e.group.position.z += mz;
+        e.group.rotation.y = Math.atan2(dx, dz);
+        // shamble animation — quantized, jerky
+        const q = Math.floor(t*6 + e.phase);
+        e.limbs.legL.rotation.x = Math.sin(q*1.1)*0.5;
+        e.limbs.legR.rotation.x = -Math.sin(q*1.1)*0.5;
+        e.limbs.armL.rotation.x = -0.7 + Math.sin(q*1.1)*0.25;
+        e.limbs.armR.rotation.x = -0.7 - Math.sin(q*1.1)*0.25;
+        // PS1 vertex wobble: tiny quantized position jitter on the head
+        e.limbs.head.position.x = (Math.sin(q*7.3 + e.phase)*0.02);
+        e.group.position.y = Math.abs(Math.sin(q*1.1))*0.05;
+      }
+      e.attackCd -= dt;
+      if (dist < 1.5 && e.attackCd <= 0){
+        e.attackCd = 1.4;
+        damagePlayer(14);
+      }
+    });
+
+    // relics
+    relics.forEach(r=>{
+      if (r.taken) return;
+      r.group.rotation.y += dt*0.8;
+      r.group.position.y = Math.sin(t*1.5 + r.spin)*0.08;
+      const dx = rig.position.x - r.group.position.x, dz = rig.position.z - r.group.position.z;
+      if (Math.hypot(dx,dz) < 1.3){
+        r.taken = true; worldGroup.remove(r.group);
+        seals++; updateHud(); sfx('seal');
+        showLore(LORE[Math.min(seals, 3)]); drawVrHud();
+        if (seals >= 3){
+          gateOpen = true; sfx('gate');
+          showLore('“The Gate has heard the seals. Go.”');
+        }
+      }
+    });
+
+    // gate
+    if (gateOpen && gateAnim < 1){
+      gateAnim = Math.min(1, gateAnim + dt*0.3);
+      gateMesh.position.y = 1.7 - gateAnim*3.2;
+      gateGlow.intensity = gateAnim*18;
+      if (gateAnim >= 1) showLore(LORE[6]);
+    }
+    if (gateOpen){
+      const gp = cellToWorld(gateCell.x, gateCell.y);
+      if (Math.hypot(rig.position.x-gp.x, rig.position.z-gp.z) < 1.6) winGame();
+    }
+
+    // ambient lore cadence
+    loreTimer -= dt;
+    if (loreTimer < 0){
+      loreTimer = 22 + Math.random()*14;
+      showLore(LORE[loreIdx % LORE.length]); loreIdx++;
+    }
+    if (loreHide && performance.now() > loreHide){ ui.lore.style.opacity = 0; loreHide = 0; }
+
+    // VR hud flash decay
+    if (vrFlash > 0){ vrFlash = Math.max(0, vrFlash - dt*2); drawVrHud(); }
+  }
+
+  renderer.render(scene, camera);
+}
+renderer.setAnimationLoop(animate);
+onResize();
+
+/* static title backdrop: a generated dungeon behind the page */
+genDungeon(); buildWorld();
+(function titleCam(){
+  const sp = cellToWorld(spawnCell.x, spawnCell.y);
+  rig.position.set(sp.x, 0, sp.z);
+  camera.position.y = 1.6;
+  camera.rotation.y = 0.4;
+})();
+</script>
+</body>
+</html>
